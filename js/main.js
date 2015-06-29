@@ -386,7 +386,6 @@
         update: function (app) {
             for (var k in sensors) {
                 if (sensors[k].isShaking()) {
-                    alert();
                     Hiyoko(k).addChildTo(this.spriteLayer);
                 }   
             }

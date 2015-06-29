@@ -9417,7 +9417,7 @@ tm.input = tm.input || {};
             var time = this.time;
 
             if (len === 1) return this;
-            for (; len > ++time;) list.shift();
+            for (; len > time;) --len,list.shift();
 
             var v = Math.abs(list[0] - list[len - 1]);
             v = this.shaking[direction] = (v > this.threshold);
@@ -9437,7 +9437,7 @@ tm.input = tm.input || {};
 
         //sceneのonenterframeから削除
         remove: function () {
-            this.parent && this.parent.off('enterframe', this.temp);
+            this.parent && this.parent.off('enterframe', this._updater);
             this.parent = null;
             return this;
         },
@@ -14875,7 +14875,7 @@ tm.display = tm.display || {};
      * 高さ
      */
     tm.display.CanvasApp.prototype.accessor("background", {
-        "get": function()   { return this.canvas._background; },
+        "get": function()   { return this._background; },
         "set": function(v)  {
             this._background = v;
             this.element.style.background = v;
