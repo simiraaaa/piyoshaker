@@ -381,19 +381,17 @@
             this.debug = DebugLabel(100, 10).addChildTo(this.labelLayer);
             for (var k in sensors) {
                 sensors[k].addChildTo(this);
-            }
+            } 
         },
         update: function (app) {
             for (var k in sensors) {
                 if (sensors[k].isShaking()) {
+                    alert();
                     Hiyoko(k).addChildTo(this.spriteLayer);
                 }   
             }
         },
     });
-    onerror = function (a, b, c, d, e) {
-        alert(e.stack());
-    };
 
     var DebugLabel = tm.define('', {
         superClass: Label,
