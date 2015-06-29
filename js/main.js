@@ -391,6 +391,9 @@
             }
         },
     });
+    onerror = function (a, b, c, d, e) {
+        alert(e.stack());
+    };
 
     var DebugLabel = tm.define('', {
         superClass: Label,
