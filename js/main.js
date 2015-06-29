@@ -34,23 +34,23 @@
         };
     })();
 
-    var GRAVITIES = [1, 2, 4, 8, 16];
+    var GRAVITIES = [1, 2, 4, 7, 14];
 
     var SCORES = {
         1: 1,
         2: 3,
         4: 7,
-        8: 12,
-        16: 24,
+        7: 15,
+        14: 50,
     };
 
-    // ‚Ð‚æ‚±‚©‚¼‚¦‚é‚â‚Â
+    // ã²ã‚ˆã“ã‹ãžãˆã‚‹ã‚„ã¤
     var piyoCounter = {
         1: 0,
         2: 0,
         4: 0,
-        8: 0,
-        16: 0,
+        7: 0,
+        14: 0,
 
     };
 
@@ -113,8 +113,8 @@
             1: 'normal',
             2: 'lady',
             4: 'waru',
-            8: 'niwa',
-            16: 'mecha',
+            7: 'niwa',
+            14: 'mecha',
             normal: 'normal',
             lady: 'lady',
             waru: 'waru',
@@ -126,13 +126,13 @@
             normal: 1,
             lady: 2,
             waru: 4,
-            niwa: 8,
-            mecha: 16,
+            niwa: 7,
+            mecha: 14,
             1: 1,
             2: 2,
             4: 4,
-            8: 8,
-            16: 16,
+            7: 7,
+            14: 15,
 
         },
 
@@ -203,7 +203,7 @@
     });
 
 
-    // ‚Ð‚æ‚±ƒNƒ‰ƒX
+    // ã²ã‚ˆã“ã‚¯ãƒ©ã‚¹
     var Hiyoko = tm.define('', {
         superClass: tm.display.AnimationSprite,
         piyo_name: null,
@@ -221,7 +221,7 @@
 
             this.form_type = PIYO.FORM.type[this.form_to];
 
-            // original‚Ìonenterframe‚ðŽg‚¤
+            // originalã®onenterframeã‚’ä½¿ã†
             this.clearEventListener('enterframe');
 
             Hiyoko.pushInstance(this);
@@ -253,13 +253,13 @@
         },
 
 
-        //˜gŠOx
+        //æž å¤–x
         isOutSideX: function () {
             var half = PIYO.HALF_SIZE;
             return half > this.x || this.x > S_WIDTH - half;
         },
 
-        //˜gŠOy
+        //æž å¤–y
         isOutSideY: function () {
             var half = PIYO.HALF_SIZE;
             return this.y < half || this.y > S_HEIGHT -half;
