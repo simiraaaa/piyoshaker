@@ -47,12 +47,12 @@
     var SCORES = createGravitiesParameter([1, 3, 9, 16, 40]);
 
     // ひよこかぞえるやつ
-    var piyoCounter = createGravitiesParameter([0,0,0,0,0]);
+    var piyoCounter = createGravitiesParameter([0, 0, 0, 0, 0]);
 
     var PIYO = {
         SIZE: 32,
-        HALF_SIZE:16,
-        
+        HALF_SIZE: 16,
+
         either: function (x, y) {
             return Math.random() < 0.5 ? x : y;
         },
@@ -63,15 +63,15 @@
         },
 
         FORM: {
-            NORMAL: createFormArray([0, 1, 2, 3,2,1]),
+            NORMAL: createFormArray([0, 1, 2, 3, 2, 1]),
             BIKKURI: createFormArray([4]),
             DOWN: createFormArray([5]),
-            FRONT: createFormArray([6, 7, 8,7]),
-            BACK: createFormArray([9, 10, 11,10]),
-            LEFT: createFormArray([12, 13, 14,13]),
-            RIGHT: createFormArray([15, 16, 17,16]),
+            FRONT: createFormArray([6, 7, 8, 7]),
+            BACK: createFormArray([9, 10, 11, 10]),
+            LEFT: createFormArray([12, 13, 14, 13]),
+            RIGHT: createFormArray([15, 16, 17, 16]),
             getHorizon: function (x) {
-                return x < 0 ? 'left' : 'right' ;
+                return x < 0 ? 'left' : 'right';
             },
             getVertical: function (x) {
                 return x < 0 ? 'back' : 'front';
@@ -101,10 +101,10 @@
                 front: 'y',
                 back: 'y',
                 left: 'x',
-                right:'x',
+                right: 'x',
             },
         },
-        SPRITES_NAME:createGravitiesParameter(['normal','lady','waru','niwa','mecha']).$extend( {
+        SPRITES_NAME: createGravitiesParameter(['normal', 'lady', 'waru', 'niwa', 'mecha']).$extend({
             normal: 'normal',
             lady: 'lady',
             waru: 'waru',
@@ -112,7 +112,7 @@
             mecha: 'mecha',
 
         }),
-        SPRITES_INDEX:createGravitiesParameter(GRAVITIES).$extend({
+        SPRITES_INDEX: createGravitiesParameter(GRAVITIES).$extend({
             normal: 1,
             lady: 2,
             waru: 4,
@@ -207,10 +207,10 @@
         form_type: null,
         form_to: null,
         form_index: null,
-        __frame:0,
+        __frame: 0,
 
-        init: function (name, form, awake,count) {
-            
+        init: function (name, form, awake, count) {
+
             this.superInit(PIYO.SHEETS[PIYO.SPRITES_NAME[name]], PIYO.SIZE, PIYO.SIZE);
             this.$extend(Hiyoko.getInitProp());
 
@@ -222,12 +222,12 @@
 
             // originalのonenterframeを使う
             this.clearEventListener('enterframe');
-            awake===undefined || awake || (this.update=this._emptyFunction);
+            awake === undefined || awake || (this.update = this._emptyFunction);
             count === undefined || count || Hiyoko.pushInstance(this);
         },
 
         onenterframe: function (e) {
-            ++this.__frame % this.currentAnimation.frequency || (this._updateFrame(),this.__frame=0);
+            ++this.__frame % this.currentAnimation.frequency || (this._updateFrame(), this.__frame = 0);
         },
 
         toggle: function () {
@@ -237,7 +237,7 @@
             return this;
         },
 
-        _emptyFunction:function(){},
+        _emptyFunction: function () { },
 
         update: function (app) {
             this.x += this.dx;
@@ -263,7 +263,7 @@
         //枠外y
         isOutSideY: function () {
             var half = PIYO.HALF_SIZE;
-            return this.y < half || this.y > S_HEIGHT -half;
+            return this.y < half || this.y > S_HEIGHT - half;
         },
 
 
@@ -279,7 +279,7 @@
                 x: Math.rand(PIYO.SIZE, S_WIDTH - PIYO.SIZE),
                 y: Math.rand(PIYO.SIZE, S_WIDTH - PIYO.SIZE),
                 dx: speed * rand * PIYO.nop() * awake,
-                dy: speed* (1 - rand) * PIYO.nop() * awake,
+                dy: speed * (1 - rand) * PIYO.nop() * awake,
             };
         },
         SPEED: 3,
@@ -291,8 +291,8 @@
                 this.instanceList.shift().remove();
             }
         },
-        MAX_INSTANCE:500,
-        
+        MAX_INSTANCE: 500,
+
     });
 
 
@@ -306,7 +306,7 @@
             nextScene: SetupScene,
             width: S_WIDTH,
             height: S_HEIGHT,
-            assets:ASSETS,
+            assets: ASSETS,
         }));
 
         app.run();
@@ -324,7 +324,7 @@
 
         init: function (p) {
             this.superInit();
-            if(!p)return;
+            if (!p) return;
             this.setNext(p.next).setBG(p.bg);
             this.spriteLayer = CanvasElement().addChildTo(this);
             this.labelLayer = CanvasElement().addChildTo(this);
@@ -346,7 +346,7 @@
         },
 
         setBG: function (bg) {
-            bg&&(this.bg = Sprite(bg)
+            bg && (this.bg = Sprite(bg)
                 .setOrigin(0, 0)
                 .setWidth(S_WIDTH)
                 .setHeight(S_HEIGHT)
@@ -369,30 +369,33 @@
                     animations: PIYO.ANIMATION,
                 });
             });
-           // this.replaceScene();
+            // this.replaceScene();
         },
 
-        update: function () { this.replaceScene();},
+        update: function () { this.replaceScene(); },
     });
 
     var TitleScene = tm.define('', {
         superClass: SuperScene,
         init: function () {
             this.superInit({ bg: 'bg' });
-            Label('ぴよ', 50).$extend({
+            var animations = [];
+
+            animations.push(Label('ぴよ', 50).$extend({
                 fontFamily: 'keifont',
                 x: 70,
                 y: -40,
-                rotation:270,
+                rotation: 270,
                 fillStyle: 'yellow',
-                scaleY:0.3,
+                scaleY: 0.3,
             }).addChildTo(this.labelLayer).tweener.to({
                 rotation: -15,
                 scaleY: 1,
-                y:160,
-            }, 1500, 'easeOutBounce');
+                y: 160,
+            }, 1500, 'easeOutBounce'));
 
-            Label('シェイカー', 40).$extend({
+
+            animations.push(Label('シェイカー', 40).$extend({
                 fontFamily: 'keifont',
                 x: 500,
                 y: 160,
@@ -409,23 +412,24 @@
             }, 250, 'easeInCirc').to({
                 rotation: 0,
                 scaleX: 1
-            }, 200, 'easeOutBounce');
+            }, 200, 'easeOutBounce'));
 
-            var hiyoko = Hiyoko('normal', 'normal', false,false).addChildTo(this.spriteLayer);
+            var hiyoko = Hiyoko('normal', 'normal', false, false).addChildTo(this.spriteLayer);
             hiyoko.setPosition(130, 170).setScale(-1, 1);
+
             hiyoko.tweener.wait(500).call(function () {
                 hiyoko.gotoAndStop('bikkuri');
                 hiyoko.onenterframe = null;
             }).wait(200).to({
-                rotation:360,
+                rotation: 360,
                 x: 16,
                 y: 50,
             }, 300).to({
-                rotation: 720-180,
+                rotation: 720 - 180,
                 x: 230,
                 y: 16,
             }, 350).to({
-                rotation: 720-90,
+                rotation: 720 - 90,
                 x: 260,
                 y: 81,
             }, 150).to({
@@ -435,54 +439,67 @@
             }, 300, 'easeOutBounce').call(function () {
                 hiyoko.gotoAndStop('down');
                 hiyoko.awake = false;
-            });
-            display.RoundRectangleShape({
-                width: 160 * 1.618,
-                height: 40,
-                x: S_WIDTH / 2,
-                y: S_HEIGHT * 0.7,
-                lineWidth: 5,
-                strokeStyle: 'yellow',
-                fillStyle: 'gold',
-                onpointingstart: function (e) { alert('まだ出来てないぴよ'); },
-            }).setInteractive(!0)
-                .setBoundingType('rect')
-                .addChildTo(this.labelLayer)
-                .addChild(Label('ゲームスタートぴよ', 30).$extend({
-                    fontFamily: 'keifont',
-                    fillStyle: 'black',
-                    x:2,
-                }));
 
-            display.RoundRectangleShape({
-                width: 285,
-                height: 40,
-                x: S_WIDTH / 2,
-                y: S_HEIGHT * 0.85,
-                lineWidth: 5,
-                strokeStyle: 'yellow',
-                fillStyle: 'gold',
-                onpointingstart: function (e) { alert('まだ出来てないぴよ'); },
-            }).setInteractive(!0)
-                .setBoundingType('rect')
-                .addChildTo(this.labelLayer)
-                .addChild(Label('エンドレスモードぴよ', 30).$extend({
-                    fontFamily: 'keifont',
-                    fillStyle: 'black',
-                    x: 2,
-                }));
+
+
+                display.RoundRectangleShape({
+                    width: 160 * 1.618,
+                    height: 40,
+                    x: S_WIDTH / 2,
+                    y: S_HEIGHT * 0.7,
+                    lineWidth: 5,
+                    strokeStyle: 'yellow',
+                    fillStyle: 'gold',
+                    onpointingstart: function (e) { alert('まだ出来てないぴよ'); },
+                }).setInteractive(!0)
+                    .setBoundingType('rect')
+                    .addChildTo(self.labelLayer)
+                    .addChild(Label('ゲームスタートぴよ', 30).$extend({
+                        fontFamily: 'keifont',
+                        fillStyle: 'black',
+                        x: 2,
+                    }));
+
+                display.RoundRectangleShape({
+                    width: 285,
+                    height: 40,
+                    x: S_WIDTH / 2,
+                    y: S_HEIGHT * 0.85,
+                    lineWidth: 5,
+                    strokeStyle: 'yellow',
+                    fillStyle: 'gold',
+                    onpointingstart: function (e) { alert('まだ出来てないぴよ'); },
+                }).setInteractive(!0)
+                    .setBoundingType('rect')
+                    .addChildTo(self.labelLayer)
+                    .addChild(Label('エンドレスモードぴよ', 30).$extend({
+                        fontFamily: 'keifont',
+                        fillStyle: 'black',
+                        x: 2,
+                    }));
+
+            });
+            var self = this;
+
+            animations.push(hiyoko.tweener);
+
+            this.onpointingstart = function (e) {
+                var app = e.app;
+                self.onpointingstart = null;
+                animations.forEach(function (e) { (100).times(function () { e.update(app); });});
+            };
 
 
             //this.debug = DebugLabel(100, 10).addChildTo(this.labelLayer);
             for (var k in sensors) {
                 sensors[k].addChildTo(this);
-            } 
+            }
         },
         update: function (app) {
             for (var k in sensors) {
                 if (sensors[k].isShaking()) {
                     Hiyoko(k).addChildTo(this.spriteLayer);
-                }   
+                }
             }
         },
     });
@@ -498,7 +515,7 @@
 
         },
 
-        update: function (a) { this.setup();},
+        update: function (a) { this.setup(); },
 
         setup: function () {
             var t = '';
@@ -508,7 +525,7 @@
                 all += c;
                 t += PIYO.SPRITES_NAME[k] + ':' + c + '\n';
             }
-            this.text = t+'all:'+all;
+            this.text = t + 'all:' + all;
         }
 
     });
