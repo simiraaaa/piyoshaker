@@ -36,23 +36,18 @@
 
     var GRAVITIES = [1, 2, 4, 6, 10];
 
-    var SCORES = {
-        1: 1,
-        2: 3,
-        4: 9,
-        6: 16,
-        10: 40,
-    };
+    function createGravitiesParameter(arr) {
+        var obj = {};
+        GRAVITIES.forEach(function (e, i) {
+            obj[e] = arr[i];
+        });
+        return obj;
+    }
+
+    var SCORES = createGravitiesParameter([1, 3, 9, 16, 40]);
 
     // ひよこかぞえるやつ
-    var piyoCounter = {
-        1: 0,
-        2: 0,
-        4: 0,
-        6: 0,
-        10: 0,
-
-    };
+    var piyoCounter = createGravitiesParameter([0,0,0,0,0]);
 
     var PIYO = {
         SIZE: 32,
@@ -109,32 +104,21 @@
                 right:'x',
             },
         },
-        SPRITES_NAME: {
-            1: 'normal',
-            2: 'lady',
-            4: 'waru',
-            6: 'niwa',
-            10: 'mecha',
+        SPRITES_NAME:createGravitiesParameter(['normal','lady','niwa','mecha']).$extend( {
             normal: 'normal',
             lady: 'lady',
             waru: 'waru',
             niwa: 'niwa',
             mecha: 'mecha',
 
-        },
-        SPRITES_INDEX: {
+        }),
+        SPRITES_INDEX:createGravitiesParameter(GRAVITIES).$extend({
             normal: 1,
             lady: 2,
             waru: 4,
             niwa: 6,
             mecha: 10,
-            1: 1,
-            2: 2,
-            4: 4,
-            6: 6,
-            10: 10,
-
-        },
+        }),
 
     };
 
@@ -145,6 +129,13 @@
     };
 
     PIYO.ANIMATION = {
+
+        normal: {
+            frames: PIYO.FORM.NORMAL,
+            next: 'normal',
+            frequency: 3,
+        },
+
         bikkuri: {
             frames: PIYO.FORM.BIKKURI,
             next: 'down',
@@ -188,16 +179,21 @@
 
     var ASSETS = {
         bg: 'assets/piyoshakebg.png',
+
         normal: 'assets/hiyoco_nomal_full.png',
         waru: 'assets/hiyoco_waru_full.png',
         lady: 'assets/hiyoco_lady_full.png',
         mecha: 'assets/hiyoco_mecha_full.png',
         niwa: 'assets/hiyoco_niwatori_full.png',
+
+        keifont: 'assets/keifont-kana.ttf',
+        number: 'assets/Ubuntu-Title.ttf',
     };
 
 
     var accel = tm.input.Accelerometer();
     var sensors = {};
+
     GRAVITIES.forEach(function (e) {
         sensors[e] = tm.input.ShakeSensor(accel).setThresholdByGravity(e);
     });
@@ -206,16 +202,19 @@
     // ひよこクラス
     var Hiyoko = tm.define('', {
         superClass: tm.display.AnimationSprite,
+
         piyo_name: null,
         form_type: null,
         form_to: null,
         form_index: null,
         __frame:0,
 
-        init: function (name) {
+        init: function (name, form, awake,count) {
+            
             this.superInit(PIYO.SHEETS[PIYO.SPRITES_NAME[name]], PIYO.SIZE, PIYO.SIZE);
             this.$extend(Hiyoko.getInitProp());
-            this.gotoAndPlay(this.form_to = PIYO.FORM.getAnimationName(this.dx, this.dy));
+
+            this.gotoAndPlay(this.form_to = form || PIYO.FORM.getAnimationName(this.dx, this.dy));
 
             piyoCounter[this.form_index = PIYO.SPRITES_INDEX[name]]++;
 
@@ -223,8 +222,8 @@
 
             // originalのonenterframeを使う
             this.clearEventListener('enterframe');
-
-            Hiyoko.pushInstance(this);
+            awake===undefined || awake || (this.update=this._emptyFunction);
+            count === undefined || count || Hiyoko.pushInstance(this);
         },
 
         onenterframe: function (e) {
@@ -237,6 +236,8 @@
             this.form_type = PIYO.FORM.type[this.form_to];
             return this;
         },
+
+        _emptyFunction:function(){},
 
         update: function (app) {
             this.x += this.dx;
@@ -377,8 +378,102 @@
     var TitleScene = tm.define('', {
         superClass: SuperScene,
         init: function () {
-            this.superInit({bg:'bg'});
-            this.debug = DebugLabel(100, 10).addChildTo(this.labelLayer);
+            this.superInit({ bg: 'bg' });
+            Label('ぴよ', 50).$extend({
+                fontFamily: 'keifont',
+                x: 70,
+                y: -40,
+                rotation:270,
+                fillStyle: 'yellow',
+                scaleY:0.3,
+            }).addChildTo(this.labelLayer).tweener.to({
+                rotation: -15,
+                scaleY: 1,
+                y:160,
+            }, 1500, 'easeOutBounce');
+
+            Label('シェイカー', 40).$extend({
+                fontFamily: 'keifont',
+                x: 500,
+                y: 160,
+                align: 'left',
+                fillStyle: 'yellow'
+            }).addChildTo(this.labelLayer).tweener.wait(400).to({
+                x: 120,
+            }, 300).to({
+                rotation: -45,
+                scaleX: 0.5
+            }, 300, 'easeOutCirc').to({
+                rotation: -30,
+                scaleX: 0.7
+            }, 250, 'easeInCirc').to({
+                rotation: 0,
+                scaleX: 1
+            }, 200, 'easeOutBounce');
+
+            var hiyoko = Hiyoko('normal', 'normal', false,false).addChildTo(this.spriteLayer);
+            hiyoko.setPosition(130, 170).setScale(-1, 1);
+            hiyoko.tweener.wait(500).call(function () {
+                hiyoko.gotoAndStop('bikkuri');
+                hiyoko.onenterframe = null;
+            }).wait(200).to({
+                rotation:360,
+                x: 16,
+                y: 50,
+            }, 300).to({
+                rotation: 720-180,
+                x: 230,
+                y: 16,
+            }, 350).to({
+                rotation: 720-90,
+                x: 260,
+                y: 81,
+            }, 150).to({
+                rotation: 720,
+                x: 290,
+                y: 141,
+            }, 300, 'easeOutBounce').call(function () {
+                hiyoko.gotoAndStop('down');
+                hiyoko.awake = false;
+            });
+            display.RoundRectangleShape({
+                width: 160 * 1.618,
+                height: 40,
+                x: S_WIDTH / 2,
+                y: S_HEIGHT * 0.7,
+                lineWidth: 5,
+                strokeStyle: 'yellow',
+                fillStyle: 'gold',
+                onpointingstart: function (e) { alert('まだ出来てないぴよ'); },
+            }).setInteractive(!0)
+                .setBoundingType('rect')
+                .addChildTo(this.labelLayer)
+                .addChild(Label('ゲームスタートぴよ', 30).$extend({
+                    fontFamily: 'keifont',
+                    fillStyle: 'black',
+                    x:2,
+                }));
+
+            display.RoundRectangleShape({
+                width: 285,
+                height: 40,
+                x: S_WIDTH / 2,
+                y: S_HEIGHT * 0.85,
+                lineWidth: 5,
+                strokeStyle: 'yellow',
+                fillStyle: 'gold',
+                onpointingstart: function (e) { alert('まだ出来てないぴよ'); },
+            }).setInteractive(!0)
+                .setBoundingType('rect')
+                .addChildTo(this.labelLayer)
+                .addChild(Label('エンドレスモードぴよ', 30).$extend({
+                    fontFamily: 'keifont',
+                    fillStyle: 'black',
+                    x: 2,
+                }));
+
+
+            //this.debug = DebugLabel(100, 10).addChildTo(this.labelLayer);
             for (var k in sensors) {
                 sensors[k].addChildTo(this);
             } 
