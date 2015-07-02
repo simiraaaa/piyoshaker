@@ -104,7 +104,7 @@
                 right:'x',
             },
         },
-        SPRITES_NAME:createGravitiesParameter(['normal','lady','niwa','mecha']).$extend( {
+        SPRITES_NAME:createGravitiesParameter(['normal','lady','niwa','waru','mecha']).$extend( {
             normal: 'normal',
             lady: 'lady',
             waru: 'waru',
