@@ -344,7 +344,7 @@
             }
         },
 
-        rmeoveSensors: function () {
+        removeSensors: function () {
             for (var k in sensors) {
                 sensors[k].remove().clear();
             }
@@ -435,12 +435,17 @@
             }, 200, 'easeOutBounce'));
 
             var hiyoko = Hiyoko('normal', 'normal', false, false).addChildTo(this.spriteLayer);
-            hiyoko.setPosition(130, 170).setScale(-1, 1);
+            hiyoko.setPosition(60, 170).setScale(-1, 1);
 
-            hiyoko.tweener.wait(500).call(function () {
+            hiyoko.tweener.to({x:100},300).call(function () {
                 hiyoko.gotoAndStop('bikkuri');
                 hiyoko.onenterframe = null;
-            }).wait(200).to({
+                hiyoko.addChild(hiyoko.label=Label('!!',40).setFontFamily('number').setFontWeight('bold').setFillStyle('red').setPosition(0, -30));
+            }).to({
+                x:130,
+            }, 400).call(function () {
+                hiyoko.label.remove();
+            }).to({
                 rotation: 360,
                 x: 16,
                 y: 50,
@@ -488,6 +493,7 @@
                 function disableButton() {
                     startButton.setInteractive(!1);
                     endlessButton.setInteractive(!1);
+                    self.removeSensors();
                 }
 
                 var endlessButton = display.RoundRectangleShape({
@@ -530,7 +536,7 @@
         },
         update: function (app) {
             this.sensorCheck(function (k) {
-                Hiyoko(k).addChildTo(app.currentScene.spriteLayer);
+                Hiyoko(k,0,1,0).addChildTo(app.currentScene.spriteLaye);
             });
         },
     });
@@ -542,12 +548,124 @@
         superClass: SuperScene,
 
         time: 10000, //10sec.
+        _waiting:true,
         init: function () {
             this.superInit({
                 bg: 'bg',
                 next: TitleScene,
             });
-            HiyokoFader.fade('out', this);
+            var self = this;
+            HiyokoFader.fade('out', this, function () {
+                self._waiting = false;
+                app.pushScene(GameStartScene());
+            });
+
+            var labelProp = {
+                fillStyle: 'yellow',
+                y: 10,
+                baseline: 'top'
+            };
+
+            Label('のこり', 30)
+                .setFontFamily('keifont')
+                .$extend(labelProp)
+                .$extend({
+                    x: 140,
+                    align: 'right',
+                })
+                .addChildTo(this.labelLayer);
+
+            this.nokori = Label('10', 35)
+                .setFontFamily('number')
+                .$extend(labelProp)
+                .$extend({
+                    x: 150,
+                    align:'left',
+                })
+                .addChildTo(this.labelLayer);
+
+            Label('びょう', 30)
+                .setFontFamily('keifont')
+                .$extend(labelProp)
+                .$extend({
+                    x: 224,
+                }).addChildTo(this.labelLayer);
+
+            this.addSensors();
+            this.addChild(DebugLabel().setPosition(100,100));
+
+        },
+
+        update: function (app) {
+            if (this._waiting) return;
+            var self = this;
+
+            this.sensorCheck(function (k) {
+                seld.addChild(Hiyoko(k));
+            });
+
+            var time = this.time -= app.deltaTime;
+            if (time < 0) {
+                this.time = 0;
+                this._waiting = true;
+                this.end();
+            }
+
+            this.nokori.text = time/1000|0;
+        },
+
+        end: function () {
+            this.replaceScene();
+        },
+
+
+    });
+
+
+    var GameStartScene = tm.define('', {
+        superClass: tm.app.Scene,
+
+        _startPosition: { x: S_WIDTH / 2, y: -40, scaleX: 0.2, scaleY: 0.2 },
+        _centerPosition:{ x: S_WIDTH / 2, y: S_HEIGHT / 2,scaleX:2,scaleY:2 },
+        _endPosition: { x: S_WIDTH / 2, y: S_HEIGHT * 1.1, scaleX: 0.2, scaleY: 0.2 },
+
+        init: function () {
+            this.superInit();
+            var self = this;
+            var label;
+            var strs =['3','2','1'];
+
+            strs.forEach(function(e,i){
+                label=self.getLabel(e,self._startPosition).addChildTo(self);
+                label.tweener.wait(i*600);
+                self.setTweener(label);
+            });
+            label = this.getLabel('振れ!!', this._startPosition).addChildTo(this);
+            label.tweener.wait(3*600).to({
+                rotation: 360,
+            }.$extend(this._centerPosition), 500, 'easeOutCirc').wait(200).to({
+                rotation: 0,
+                scaleX: 0,
+                scaleY: 0,
+                alpha: 0,
+            }, 300, 'easeInCirc').call(function () {
+                app.popScene(self);
+            });
+
+        },
+
+        setTweener: function (label) {
+            label.tweener.to(this._centerPosition,
+                500,'easeOutCirc').to(this._endPosition,
+                500,'easeInCirc');
+            return label;
+        },
+
+        getLabel: function (n,o) {
+            return Label(n,40).$extend({
+                fontFamily: 'number',
+                fillStyle: 'yellow'
+            }).$extend(o);
         },
 
 
@@ -637,8 +755,9 @@
 
             isIn && (fader2.onend = function () {
                 scene.replaceScene();
-                onend && onend();
             });
+
+            onend && fader2.on('end', onend);
         },
     });
 
