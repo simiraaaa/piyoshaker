@@ -216,14 +216,16 @@
 
             this.gotoAndPlay(this.form_to = form || PIYO.FORM.getAnimationName(this.dx, this.dy));
 
-            piyoCounter[this.form_index = PIYO.SPRITES_INDEX[name]]++;
 
             this.form_type = PIYO.FORM.type[this.form_to];
 
             // originalのonenterframeを使う
             this.clearEventListener('enterframe');
             awake === undefined || awake || (this.update = this._emptyFunction);
-            count === undefined || count || Hiyoko.pushInstance(this);
+            if (count === undefined || count) {
+                piyoCounter[this.form_index = PIYO.SPRITES_INDEX[name]]++;
+                Hiyoko.pushInstance(this);
+            }
         },
 
         onenterframe: function (e) {
@@ -328,6 +330,24 @@
             this.setNext(p.next).setBG(p.bg);
             this.spriteLayer = CanvasElement().addChildTo(this);
             this.labelLayer = CanvasElement().addChildTo(this);
+        },
+
+        addSensors: function () {
+            for (var k in sensors) {
+                sensors[k].addChildTo(this);
+            }
+        },
+
+        sensorCheck: function (func) {
+            for (var k in sensors) {
+                sensors[k].isShaking() && func(k);
+            }
+        },
+
+        rmeoveSensors: function () {
+            for (var k in sensors) {
+                sensors[k].remove().clear();
+            }
         },
 
         replaceScene: function (scene) {
@@ -442,7 +462,7 @@
 
 
 
-                display.RoundRectangleShape({
+                var startButton = display.RoundRectangleShape({
                     width: 160 * 1.618,
                     height: 40,
                     x: S_WIDTH / 2,
@@ -450,9 +470,13 @@
                     lineWidth: 5,
                     strokeStyle: 'yellow',
                     fillStyle: 'gold',
-                    onpointingstart: function (e) { alert('まだ出来てないぴよ'); },
-                }).setInteractive(!0)
-                    .setBoundingType('rect')
+                    onpointingstart: function (e) {
+                        disableButton();
+                        self.setNext(GameScene);
+                        HiyokoFader.fade('in', self);
+                    },
+                }).setInteractive(!0, 'rect');
+                startButton
                     .addChildTo(self.labelLayer)
                     .addChild(Label('ゲームスタートぴよ', 30).$extend({
                         fontFamily: 'keifont',
@@ -460,7 +484,13 @@
                         x: 2,
                     }));
 
-                display.RoundRectangleShape({
+
+                function disableButton() {
+                    startButton.setInteractive(!1);
+                    endlessButton.setInteractive(!1);
+                }
+
+                var endlessButton = display.RoundRectangleShape({
                     width: 285,
                     height: 40,
                     x: S_WIDTH / 2,
@@ -468,8 +498,12 @@
                     lineWidth: 5,
                     strokeStyle: 'yellow',
                     fillStyle: 'gold',
-                    onpointingstart: function (e) { alert('まだ出来てないぴよ'); },
-                }).setInteractive(!0)
+                    onpointingstart: function (e) {
+                        disableButton();
+                        alert('まだ出来てないぴよ');
+                    },
+                }).setInteractive(!0, 'rect');
+                endlessButton
                     .setBoundingType('rect')
                     .addChildTo(self.labelLayer)
                     .addChild(Label('エンドレスモードぴよ', 30).$extend({
@@ -486,23 +520,131 @@
             this.onpointingstart = function (e) {
                 var app = e.app;
                 self.onpointingstart = null;
-                animations.forEach(function (e) { (100).times(function () { e.update(app); });});
+                animations.forEach(function (e) { (100).times(function () { e.update(app); }); });
             };
 
 
-            //this.debug = DebugLabel(100, 10).addChildTo(this.labelLayer);
-            for (var k in sensors) {
-                sensors[k].addChildTo(this);
-            }
+            this.debug = DebugLabel(100, 10).addChildTo(this.labelLayer);
+            this.addSensors();
+
         },
         update: function (app) {
-            for (var k in sensors) {
-                if (sensors[k].isShaking()) {
-                    Hiyoko(k).addChildTo(this.spriteLayer);
-                }
-            }
+            this.sensorCheck(function (k) {
+                Hiyoko(k).addChildTo(app.currentScene.spriteLayer);
+            });
         },
     });
+
+
+
+
+    var GameScene = tm.define('', {
+        superClass: SuperScene,
+
+        time: 10000, //10sec.
+        init: function () {
+            this.superInit({
+                bg: 'bg',
+                next: TitleScene,
+            });
+            HiyokoFader.fade('out', this);
+        },
+
+
+    });
+
+    var HiyokoFader = tm.define('', {
+        superClass: CanvasElement,
+
+        blackImage: display.RectangleShape({
+            width: S_WIDTH * 1.1,
+            height: PIYO.SIZE,
+            fillStyle: 'black',
+            strokeStyle: 'transparent'
+        }).canvas,
+
+        rightAnim: {
+            x: S_WIDTH * 1.05,
+        },
+        leftAnim: {
+            x: S_WIDTH * -0.05,
+        },
+
+        ended: false,
+
+        init: function (p) {
+            this.superInit();
+            p = p || {};
+            var isLeft = p.direction === 'left';
+            var direction = p.direction || 'right';
+            var isFront = p.type === 'front';
+            this.setOrigin(0, 0);
+            this.y = p.y || 0;
+            this.x = isLeft ? S_WIDTH * 1.05 : -0.05 * S_WIDTH;
+            var origin = isLeft ^ isFront;
+            var black = Sprite(this.blackImage).setOrigin(isLeft ^ isFront, 0);
+            for (var i = 0, end = S_WIDTH / PIYO.SIZE / 2; i < end; ++i) {
+                var y = i * PIYO.SIZE * 2;
+                Sprite(this.blackImage).setOrigin(origin, 0).setPosition(0, y).addChildTo(this);
+                Hiyoko(GRAVITIES.pickup(), direction, false, false)
+                    .addChildTo(this).$extend({
+                        y: y,
+                        x: 0,
+                        originY: 0,
+                    });
+            }
+
+            this._anim = isLeft ? this.leftAnim : this.rightAnim;
+
+            var self = this;
+
+            this.tweener.to(this._anim, 1200).call(this.getEndedFunction());
+
+        },
+
+        getEndedFunction: function () {
+            var self = this;
+            return this._endedFunction || (this._endedFunction = function () {
+                self.fire(tm.event.Event('end'));
+                self.ended = true;
+            });
+        },
+
+        addSkipEventToScene: function (scene) {
+            var self = this;
+            scene.on('pointingstart', function () { self.skip(); });
+            return this;
+        },
+
+        skip: function () {
+            this.ended || this.tweener.clear().to(this._anim, 1).call(this.getEndedFunction());
+            return this;
+        }
+
+    }).$extend({
+        fade: function (type, scene, onend) {
+            var isIn = type === 'in';
+            var fader = HiyokoFader({
+                direction: 'right',
+                type: isIn ? 'front' : '',
+                y: PIYO.SIZE
+            }).addChildTo(scene).addSkipEventToScene(scene);
+
+            var fader2 = HiyokoFader({
+                direction: 'left',
+                type: isIn ? 'front' : '',
+            }).addChildTo(scene).addSkipEventToScene(scene);
+
+            isIn && (fader2.onend = function () {
+                scene.replaceScene();
+                onend && onend();
+            });
+        },
+    });
+
+
+
+
 
     var DebugLabel = tm.define('', {
         superClass: Label,

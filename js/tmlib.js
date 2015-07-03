@@ -9440,6 +9440,13 @@ tm.input = tm.input || {};
         },
 
 
+        //clear
+        clear: function () {
+            this.xList.length = this.yList.length = this.zList.length = 0;
+            return this;
+        },
+
+
     }).$extend({
         //static
         getUpdater: function (self) {
