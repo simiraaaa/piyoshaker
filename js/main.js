@@ -536,7 +536,7 @@
         },
         update: function (app) {
             this.sensorCheck(function (k) {
-                Hiyoko(k,0,1,0).addChildTo(app.currentScene.spriteLaye);
+                Hiyoko(k,0,1,0).addChildTo(app.currentScene.spriteLayer);
             });
         },
     });
@@ -601,7 +601,7 @@
             var self = this;
 
             this.sensorCheck(function (k) {
-                seld.addChild(Hiyoko(k));
+                self.spriteLayer.addChild(Hiyoko(k));
             });
 
             var time = this.time -= app.deltaTime;
