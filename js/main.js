@@ -2,8 +2,9 @@
 
 (function (tm, undefined) {
 
-    tm.asset.Script.loadStats();
+    //tm.asset.Script.loadStats();
     // debug
+    tm.social.Nineleap.DEBUG_GAME_ID = '4556';
 
     var window = tm.global;
     // localize
@@ -303,7 +304,7 @@
         app = display.CanvasApp('#world');
         //window.app = app;
         app.resize(S_WIDTH, S_HEIGHT).fitWindow();
-        app.enableStats();
+        //app.enableStats();
         app.replaceScene(tm.game.LoadingScene({
             nextScene: SetupScene,
             width: S_WIDTH,
@@ -524,13 +525,13 @@
                     strokeStyle: 'yellow',
                     fillStyle: 'gold',
                     onpointingstart: function (e) {
-                        //disableButton();
+                        disableButton();
                         alert('まだ出来てないぴよ');
                     },
                 }).setInteractive(!0, 'rect');
                 endlessButton
                     .setBoundingType('rect')
-                    .addChildTo(self.labelLayer)
+                    //.addChildTo(self.labelLayer)
                     .addChild(Label('エンドレスモードぴよ', 30).$extend({
                         fontFamily: 'keifont',
                         fillStyle: 'black',
@@ -549,7 +550,7 @@
             };
 
 
-            this.debug = DebugLabel(100, 10).addChildTo(this.labelLayer);
+            //this.debug = DebugLabel(100, 10).addChildTo(this.labelLayer);
             this.addSensors();
 
         },
@@ -612,7 +613,7 @@
                 }).addChildTo(this.labelLayer);
 
             this.addSensors();
-            this.addChild(DebugLabel().setPosition(100,100));
+            //this.addChild(DebugLabel().setPosition(100,100));
 
         },
 
@@ -657,6 +658,7 @@
 
         init: function () {
             this.superInit();
+            var tweeners =this.tweeners = [];
 
             this.getLabel('とくてんぴよ', {
                 fontSize: 30,
@@ -673,12 +675,21 @@
                 scores.push(SCORES[k] * piyoCounter[k]|0);
                 names.push(k);
                 this.tweener.call(function () {
-                    Hiyoko(names.shift(), 'normal', false, false).addChildTo(self).setPosition(++i*S_WIDTH/6,160);
+                    var k = names.shift();
+                    var x;
+                    Hiyoko(k, 'normal', false, false)
+                        .addChildTo(self)
+                        .setPosition(x = ++i * S_WIDTH / 6, 110);
+                    self.getLabel(piyoCounter[k]+'', {x:x,y:140,fontSize:26}).addChildTo(self);
+
                 }).wait(500);
             }
+
+            this.tweeners.push(this.tweener);
+
             scoreLabel=this.getLabel(0, {
                 x: S_WIDTH / 2,
-                y: 100,
+                y: 70,
             }).addChildTo(this);
 
             scores.forEach(function (e) {
@@ -687,6 +698,68 @@
                 }, 400).wait(100);
             });
 
+            
+            function getComment() {
+                var score = scoreLabel.score;
+                var comments = {
+                    1000:'へなちょこぴよ\nこんなの ふったうちに\nはいらないぴよ',
+                    2000: 'もっと がんばるぴよ\nほんきで ふるぴよ',
+                    3000: 'はげしさが\nぜんぜん たりないぴよ',
+                    4000: 'これで ふつうの\nぴよシェイカー ぴよ\nまだまだ みちのりは\nけわしいぴよ',
+                    5000: 'けっこう がんばったぴよ\nでももっと はやく ふれるぴよ',
+                    6000: 'ちゅうきゅう\nぴよシェイカー ぴよ\nもっと あつくなれぴよ',
+                    7000: 'がんばったぴよ\nあしたは\nきんにくつう かもぴよ',
+                    8000: 'じょうきゅう\nぴよシェイカー ぴよ\nじぶんよりうえは いないと\nちょうしに のりだすころ ぴよ',
+                    9000: 'すごいぴよ\nめ にもとまらぬ はやさぴよ',
+                    10000: 'すごすぎるぴよ\nすごすぎて\nなにもいえない ぴよ',
+                    11000: 'ヤバいぴよ\nこんな ゲームに そこまで\nマジに ならなくても いいぴよ',
+                    12000: 'ふりすぎぴよ\nこわれても せきにんは\nとらないぴよ',
+                    13000: 'ちょうじんきゅう\nぴよシェイカー ぴよ\nいきぎれ はぁはぁ\nうるさいぴよ',
+                    14000: 'どういうことぴよ\nがんばりすぎ ぴよ',
+                    15000: 'へんたいきゅう\nぴよシェイカー ぴよ\nしょうじきいって\nキモいぴよ',
+                };
+
+                for (var k in comments) {
+                    if (score < k) return comments[k];
+                }
+
+                return 'ゴッド オブ\nぴよシェイカー ぴよ\nここまで これるやつ\nどうせ いないから コメント\nてきとうで いいだろ...ぴよ';
+            }
+            tweeners.push(scoreLabel.tweener.call(function () {
+                tweeners.push(self.getLabel('コメント', { x: S_WIDTH / 2, y: 170, fontFamily: 'keifont' })
+                    .addChildTo(self).tweener.wait(200).call(function () {
+                        Hiyoko('normal', 'normal', false, false)
+                            .setPosition(16, 200)
+                            .setScale(-1,1)
+                            .addChildTo(self);
+                        var serif=display.RoundRectangleShape({
+                            x: 30,
+                            y: 190,
+                            originX: 0,
+                            originY:0,
+                            height: 125,
+                            width: 280,
+                            fillStyle: 'gold',
+                            strokeStyle: 'yellow',
+                            lineWidth:5,
+                        }).addChildTo(self);
+                        serif.addChild(Label(getComment(), 20).$extend({
+                            x: 10,
+                            y: 10,
+                            fontFamily:'keifont',
+                            align: 'left',
+                            baseline: 'top',
+                            fillStyle:'black',
+                        }));
+
+                        tweeners.push(serif.tweener.wait(5000).call(function () {
+                            var score = scoreLabel.score;
+                            var comment = getComment();
+                            self.endGame(score, comment);
+                        }));
+                    }));
+            }));
+
             scoreLabel.score = 0;
 
             scoreLabel.accessor('score', {
@@ -694,6 +767,18 @@
                 set: function (s) { this.text = this._score = s|0;}
             });
 
+
+        },
+
+        onpointingstart: function () {
+            this.tweeners.forEach(function (e) {
+                (100).times(function () { e.update(app);  });
+            });
+        },
+
+        endGame: function (score, comment) {
+            app.stop();
+            tm.social.Nineleap.postRanking(score,comment);
         },
 
     });
