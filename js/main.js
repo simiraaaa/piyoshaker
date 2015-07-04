@@ -294,7 +294,7 @@
                 this.instanceList.shift().remove();
             }
         },
-        MAX_INSTANCE: 500,
+        MAX_INSTANCE: 200,
 
     });
 
