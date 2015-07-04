@@ -2,7 +2,7 @@
 
 (function (tm, undefined) {
 
-    //tm.asset.Script.loadStats();
+    tm.asset.Script.loadStats();
     // debug
     tm.social.Nineleap.DEBUG_GAME_ID = '4556';
 
@@ -304,7 +304,7 @@
         app = display.CanvasApp('#world');
         //window.app = app;
         app.resize(S_WIDTH, S_HEIGHT).fitWindow();
-        //app.enableStats();
+        app.enableStats();
         app.replaceScene(tm.game.LoadingScene({
             nextScene: SetupScene,
             width: S_WIDTH,
