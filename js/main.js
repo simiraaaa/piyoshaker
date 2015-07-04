@@ -755,7 +755,7 @@
                         tweeners.push(serif.tweener.wait(5000).call(function () {
                             var score = scoreLabel.score;
                             var comment = getComment();
-                            self.endGame(score, comment);
+                            self.endGame(score,score + 'てん「' +comment+'」');
                         }));
                     }));
             }));
