@@ -63,7 +63,7 @@
         },
 
         FORM: {
-            NORMAL: createFormArray([0, 1, 2, 3, 2, 1]),
+            NORMAL: createFormArray([1, 2, 3,2]),
             BIKKURI: createFormArray([4]),
             DOWN: createFormArray([5]),
             FRONT: createFormArray([6, 7, 8, 7]),
@@ -324,12 +324,31 @@
         spriteLayer: null,
         labelLayer: null,
 
+        _startPosition: { x: S_WIDTH / 2, y: -40, scaleX: 0.2, scaleY: 0.2 },
+        _centerPosition: { x: S_WIDTH / 2, y: S_HEIGHT / 2, scaleX: 2, scaleY: 2 },
+        _endPosition: { x: S_WIDTH / 2, y: S_HEIGHT * 1.1, scaleX: 0.2, scaleY: 0.2 },
+
+
         init: function (p) {
             this.superInit();
             if (!p) return;
             this.setNext(p.next).setBG(p.bg);
             this.spriteLayer = CanvasElement().addChildTo(this);
             this.labelLayer = CanvasElement().addChildTo(this);
+        },
+
+        setTweener: function (label) {
+            label.tweener.to(this._centerPosition,
+                500, 'easeOutCirc').to(this._endPosition,
+                500, 'easeInCirc');
+            return label;
+        },
+
+        getLabel: function (n, o) {
+            return Label(n, 40).$extend({
+                fontFamily: 'number',
+                fillStyle: 'yellow'
+            }).$extend(o);
         },
 
         addSensors: function () {
@@ -505,7 +524,7 @@
                     strokeStyle: 'yellow',
                     fillStyle: 'gold',
                     onpointingstart: function (e) {
-                        disableButton();
+                        //disableButton();
                         alert('まだ出来てないぴよ');
                     },
                 }).setInteractive(!0, 'rect');
@@ -552,8 +571,9 @@
         init: function () {
             this.superInit({
                 bg: 'bg',
-                next: TitleScene,
+                next: ResultScene,
             });
+            app.screenshot = null;
             var self = this;
             HiyokoFader.fade('out', this, function () {
                 self._waiting = false;
@@ -615,19 +635,72 @@
         },
 
         end: function () {
-            this.replaceScene();
+            this.removeSensors();
+            var label = this.getLabel('おわりぴよ', { fontSize: 30 }.$extend(this._startPosition))
+                .setFontFamily('keifont').addChildTo(this);
+            this.setTweener(label);
+            var self = this;
+            label.tweener.call(function () {
+                HiyokoFader.fade('in', self);
+            });
+            this.labelLayer.draw = function (canv) {
+                app.screenshot || (app.screenshot = canv.clone());
+            };
+
         },
 
 
     });
 
+    var ResultScene = tm.define('', {
+        superClass: SuperScene,
+
+        init: function () {
+            this.superInit();
+
+            this.getLabel('とくてんぴよ', {
+                fontSize: 30,
+                x: S_WIDTH / 2,
+                y: 20,
+                fontFamily: 'keifont',
+            }).addChildTo(this);
+
+            var scores = [];
+            var names = [];
+            var self=this;
+            var i = 0;
+            for (var k in piyoCounter){
+                scores.push(SCORES[k] * piyoCounter[k]|0);
+                names.push(k);
+                this.tweener.call(function () {
+                    Hiyoko(names.shift(), 'normal', false, false).addChildTo(self).setPosition(++i*S_WIDTH/6,160);
+                }).wait(500);
+            }
+            scoreLabel=this.getLabel(0, {
+                x: S_WIDTH / 2,
+                y: 100,
+            }).addChildTo(this);
+
+            scores.forEach(function (e) {
+                scoreLabel.tweener.by({
+                    score: e
+                }, 400).wait(100);
+            });
+
+            scoreLabel.score = 0;
+
+            scoreLabel.accessor('score', {
+                get: function () { return this._score; },
+                set: function (s) { this.text = this._score = s|0;}
+            });
+
+        },
+
+    });
+
 
     var GameStartScene = tm.define('', {
-        superClass: tm.app.Scene,
-
-        _startPosition: { x: S_WIDTH / 2, y: -40, scaleX: 0.2, scaleY: 0.2 },
-        _centerPosition:{ x: S_WIDTH / 2, y: S_HEIGHT / 2,scaleX:2,scaleY:2 },
-        _endPosition: { x: S_WIDTH / 2, y: S_HEIGHT * 1.1, scaleX: 0.2, scaleY: 0.2 },
+        superClass: SuperScene,
 
         init: function () {
             this.superInit();
@@ -640,7 +713,7 @@
                 label.tweener.wait(i*600);
                 self.setTweener(label);
             });
-            label = this.getLabel('振れ!!', this._startPosition).addChildTo(this);
+            label = this.getLabel('ふるぴよ', this._startPosition).setFontFamily('keifont').addChildTo(this);
             label.tweener.wait(3*600).to({
                 rotation: 360,
             }.$extend(this._centerPosition), 500, 'easeOutCirc').wait(200).to({
@@ -652,20 +725,6 @@
                 app.popScene(self);
             });
 
-        },
-
-        setTweener: function (label) {
-            label.tweener.to(this._centerPosition,
-                500,'easeOutCirc').to(this._endPosition,
-                500,'easeInCirc');
-            return label;
-        },
-
-        getLabel: function (n,o) {
-            return Label(n,40).$extend({
-                fontFamily: 'number',
-                fillStyle: 'yellow'
-            }).$extend(o);
         },
 
 
@@ -740,7 +799,7 @@
         }
 
     }).$extend({
-        fade: function (type, scene, onend) {
+        fade: function (type, scene, onend,replace) {
             var isIn = type === 'in';
             var fader = HiyokoFader({
                 direction: 'right',
@@ -753,11 +812,15 @@
                 type: isIn ? 'front' : '',
             }).addChildTo(scene).addSkipEventToScene(scene);
 
-            isIn && (fader2.onend = function () {
+            replace = replace === undefined ? true : replace;
+
+            isIn && replace && (fader2.onend = function () {
                 scene.replaceScene();
             });
 
             onend && fader2.on('end', onend);
+
+            return [fader, fader2];
         },
     });
 
